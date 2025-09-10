@@ -97,6 +97,16 @@ LogApiRepository::getCursorList(perPage: 10);
 LogApiRepository::getDetail(id: 1);
 ```
 
+## Screenshot
+
+![](./screenshot/app-log-table.png)
+
+![](./screenshot/app-log-detail.png)
+
+![](./screenshot/api-log-table.png)
+
+![](./screenshot/api-log-detail.png)
+
 ## Security
 
 If you've found a bug regarding security, please mail [jardik.oryza@gmail.com](mailto:jardik.oryza@gmail.com) instead of
