@@ -9,28 +9,42 @@ use Jhonoryza\DatabaseLogger\Models\LogApi;
 class ApiLogger
 {
     /**
-     * this should be register in boot ServiceProvider
-     * usage Http::logRequest()->withHeaders([]) ..etc
+     * Register Http macro for logging API request/response.
+     * This should be register in boot ServiceProvider
+     * Usage: Http::logRequest()->withHeaders([...])->post(...);
      */
     public static function registerMacro(string $name = 'logRequest'): void
     {
         Http::macro($name, function () {
             return Http::withMiddleware(function (callable $handler) {
                 return function ($request, array $options) use ($handler) {
-                    // Detect payload in multiple formats
+
+                    // Normalize payload (json, form, multipart, raw body)
                     $payload = $options['json']
                         ?? $options['form_params']
                         ?? $options['multipart']
                         ?? $options['body']
                         ?? null;
 
-                    // Normalize payload untuk logging
                     $normalizePayload = function ($payload) {
-                        if (is_array($payload) || is_object($payload)) {
+                        if (is_array($payload)) {
+                            // Handle multipart (file uploads)
+                            if (isset($payload[0]['contents'])) {
+                                foreach ($payload as &$part) {
+                                    if (isset($part['contents']) && is_resource($part['contents'])) {
+                                        $part['contents'] = '[binary stream]';
+                                    }
+                                }
+                            }
+
                             return json_encode($payload, JSON_PRETTY_PRINT);
                         }
+
+                        if (is_object($payload)) {
+                            return json_encode($payload, JSON_PRETTY_PRINT);
+                        }
+
                         if (is_string($payload)) {
-                            // batasi panjang raw body biar aman
                             return mb_strlen($payload) > 5000
                                 ? mb_substr($payload, 0, 5000).'... [truncated]'
                                 : $payload;
@@ -41,6 +55,20 @@ class ApiLogger
 
                     $payload = $normalizePayload($payload);
 
+                    // Fallback ambil dari request body
+                    if ($payload === null) {
+                        $payload = (string) $request->getBody();
+                        $contentType = $request->getHeaderLine('Content-Type');
+
+                        if (str_contains($contentType, 'application/json')) {
+                            $decoded = json_decode($payload, true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $payload = json_encode($decoded, JSON_PRETTY_PRINT);
+                            }
+                        }
+                    }
+
+                    // Execute request
                     return $handler($request, $options)
                         ->then(function ($response) use ($request, $payload) {
                             try {
@@ -49,33 +77,37 @@ class ApiLogger
                                     'method' => $request->getMethod(),
                                     'code' => $response->getStatusCode(),
                                     'header' => json_encode($request->getHeaders(), JSON_PRETTY_PRINT),
-                                    'payload' => $payload ? json_encode($payload, JSON_PRETTY_PRINT) : null,
-                                    'response' => (string) $response->getBody(),
+                                    'payload' => $payload,
+                                    'response' => mb_strlen((string) $response->getBody()) > 5000
+                                                            ? mb_substr((string) $response->getBody(), 0, 5000).'... [truncated]'
+                                                            : (string) $response->getBody(),
+                                    'response_header' => json_encode($response->getHeaders(), JSON_PRETTY_PRINT),
                                 ]);
                             } catch (\Throwable $e) {
-                                Log::error('failed write to log api (exception): '.$e->getMessage());
+                                Log::error('Failed to write API log (success): '.$e->getMessage());
                             }
 
                             return $response;
                         })
                         ->otherwise(function ($reason) use ($request, $payload) {
-                            // failed (exception)
+                            // Catch exceptions (timeout, DNS error, etc.)
                             try {
                                 LogApi::create([
                                     'url' => (string) $request->getUri(),
                                     'method' => $request->getMethod(),
-                                    'status_code' => null,
+                                    'code' => null,
                                     'header' => json_encode($request->getHeaders(), JSON_PRETTY_PRINT),
-                                    'payload' => $payload ? json_encode($payload, JSON_PRETTY_PRINT) : null,
+                                    'payload' => $payload,
                                     'response' => $reason instanceof \Throwable
-                                        ? $reason->getMessage()
-                                        : json_encode($reason),
+                                                            ? $reason->getMessage()
+                                                            : json_encode($reason),
+                                    'response_header' => null,
                                 ]);
                             } catch (\Throwable $e) {
-                                Log::error('failed write to log api (exception): '.$e->getMessage());
+                                Log::error('Failed to write API log (exception): '.$e->getMessage());
                             }
 
-                            throw $reason; // rethrow it so it can still be caught by the caller
+                            throw $reason; // rethrow so caller can still handle
                         });
                 };
             });
