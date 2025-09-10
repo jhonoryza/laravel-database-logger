@@ -28,7 +28,7 @@ class LogHandler extends AbstractProcessingHandler
                 'level' => $record->level->value,
                 'level_name' => $record->level->getName(),
                 'channel' => $record->channel,
-                'record_datetime' => $record->datetime ? json_encode($record->datetime) : null,
+                'record_datetime' => $record->datetime ? $record->datetime : null,
                 'extra' => ! empty($record->extra) ? json_encode($record['extra']) : null,
                 'formatted' => $record->formatted,
             ]);

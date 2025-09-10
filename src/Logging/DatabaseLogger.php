@@ -15,7 +15,7 @@ class DatabaseLogger
 
         $level = Logger::toMonologLevel($config['level'] ?? 'debug');
 
-        $logger = new Logger('log_apps');
+        $logger = new Logger('database');
 
         $logger->pushHandler(new LogHandler($connection, $level));
 

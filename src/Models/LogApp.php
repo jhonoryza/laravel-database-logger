@@ -26,4 +26,8 @@ class LogApp extends Model
         'remote_addr',
         'user_agent',
     ];
+
+    protected $casts = [
+        'record_datetime' => 'datetime',
+    ];
 }

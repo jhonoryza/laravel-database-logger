@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('level')->index();
             $table->string('level_name');
             $table->string('channel')->index();
-            $table->string('record_datetime')->nullable();
+            $table->dateTimeTz('record_datetime')->nullable();
             $table->longText('extra')->nullable();
             $table->longText('formatted');
             $table->string('remote_addr')->nullable();
@@ -27,6 +27,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('laravel_logs');
+        Schema::dropIfExists('log_apps');
     }
 };
