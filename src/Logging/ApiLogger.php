@@ -17,7 +17,29 @@ class ApiLogger
         Http::macro($name, function () {
             return Http::withMiddleware(function (callable $handler) {
                 return function ($request, array $options) use ($handler) {
-                    $payload = $options['json'] ?? $options['form_params'] ?? null;
+                    // Detect payload in multiple formats
+                    $payload = $options['json']
+                        ?? $options['form_params']
+                        ?? $options['multipart']
+                        ?? $options['body']
+                        ?? null;
+
+                    // Normalize payload untuk logging
+                    $normalizePayload = function ($payload) {
+                        if (is_array($payload) || is_object($payload)) {
+                            return json_encode($payload, JSON_PRETTY_PRINT);
+                        }
+                        if (is_string($payload)) {
+                            // batasi panjang raw body biar aman
+                            return mb_strlen($payload) > 5000
+                                ? mb_substr($payload, 0, 5000).'... [truncated]'
+                                : $payload;
+                        }
+
+                        return $payload;
+                    };
+
+                    $payload = $normalizePayload($payload);
 
                     return $handler($request, $options)
                         ->then(function ($response) use ($request, $payload) {
