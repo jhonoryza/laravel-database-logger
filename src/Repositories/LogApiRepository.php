@@ -7,15 +7,15 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
-use Jhonoryza\DatabaseLogger\Models\LogApp;
+use Jhonoryza\DatabaseLogger\Models\LogApi;
 
-class LogAppRepository
+class LogApiRepository
 {
     public static function getCursorList(?int $perPage): CursorPaginator
     {
         $perPage = $perPage ?? 10;
 
-        return LogApp::query()
+        return LogApi::query()
             ->cursorPaginate(perPage: $perPage, cursorName: 'page');
     }
 
@@ -23,7 +23,7 @@ class LogAppRepository
     {
         $perPage = $perPage ?? 10;
 
-        return LogApp::query()
+        return LogApi::query()
             ->paginate(perPage: $perPage, pageName: 'page');
     }
 
@@ -31,19 +31,31 @@ class LogAppRepository
     {
         $perPage = $perPage ?? 10;
 
-        return LogApp::query()
+        return LogApi::query()
             ->simplePaginate(perPage: $perPage, pageName: 'page');
     }
 
     public static function getAllList(?int $limit): Collection
     {
-        return LogApp::query()
+        return LogApi::query()
             ->when(value: $limit, callback: fn ($query, $value) => $query->limit($value))
             ->get();
     }
 
     public static function getDetail(int $id): Model
     {
-        return LogApp::findOrFail($id);
+        return LogApi::findOrFail($id);
+    }
+
+    public static function create(array $data): LogApi
+    {
+        return LogApi::create([
+            'url' => $data['url'],
+            'method' => $data['method'],
+            'code' => $data['code'],
+            'header' => $data['header'],
+            'payload' => $data['payload'],
+            'response' => $data['response'],
+        ]);
     }
 }

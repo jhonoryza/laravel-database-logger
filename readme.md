@@ -25,7 +25,7 @@ php artisan vendor:publish --tag laravel-database-logger
 
 4. it is recommended to use different database connection from the main used one.
 
-5. after package is installed, you can run `php artisan migrate` to create the table
+5. after package is installed, you can run `php artisan migrate` to create table `logs_app` and `logs_api`
 
 6. then modify `logging.php`
 
@@ -43,6 +43,59 @@ php artisan vendor:publish --tag laravel-database-logger
     - add in `.env` file to set `DB_CONNECTION_LOGGER=pgsql`
 
 ---
+
+## Additional API Logger
+
+register the macro
+
+```php
+<?php
+
+use Jhonoryza\DatabaseLogger\Logging\ApiLogger;
+
+class ServiceProvider
+{
+    public function boot()
+    {
+        ApiLogger::registerMacro();
+    }
+}
+```
+
+to automatically add api logger to the database call `logRequest` function
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Http;
+
+$response = Http::logRequest()
+    ->withHeaders(['X-Foo' => 'Bar'])
+    ->post('https://api.example.com/v1/users?id=123', [
+        'name' => 'Fajar',
+    ]);
+```
+
+## Additional Repository
+
+```php
+<?php
+
+use Jhonoryza\DatabaseLogger\Repositories\LogAppRepository;
+use Jhonoryza\DatabaseLogger\Repositories\LogApiRepository;
+
+LogAppRepository::getAllList(limit: 10);
+LogAppRepository::getSimplePaginateList(perPage: 10);
+LogAppRepository::getPaginateList(perPage: 10);
+LogAppRepository::getCursorList(perPage: 10);
+LogAppRepository::getDetail(id: 1);
+
+LogApiRepository::getAllList(limit: 10);
+LogApiRepository::getSimplePaginateList(perPage: 10);
+LogApiRepository::getPaginateList(perPage: 10);
+LogApiRepository::getCursorList(perPage: 10);
+LogApiRepository::getDetail(id: 1);
+```
 
 ## Security
 
