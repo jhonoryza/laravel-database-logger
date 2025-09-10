@@ -1,5 +1,7 @@
 # Laravel Database Logger
 
+[![Latest Stable Version](http://poser.pugx.org/jhonoryza/laravel-database-logger/v)](https://packagist.org/packages/jhonoryza/laravel-database-logger) [![Total Downloads](http://poser.pugx.org/jhonoryza/laravel-database-logger/downloads)](https://packagist.org/packages/jhonoryza/laravel-database-logger) [![Latest Unstable Version](http://poser.pugx.org/jhonoryza/laravel-database-logger/v/unstable)](https://packagist.org/packages/jhonoryza/laravel-database-logger) [![License](http://poser.pugx.org/jhonoryza/laravel-database-logger/license)](https://packagist.org/packages/jhonoryza/laravel-database-logger) [![PHP Version Require](http://poser.pugx.org/jhonoryza/laravel-database-logger/require/php)](https://packagist.org/packages/jhonoryza/laravel-database-logger)
+
 This package provides ability to store laravel log to the database table.
 
 ## Requirement
