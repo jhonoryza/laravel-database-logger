@@ -40,7 +40,7 @@ php artisan vendor:publish --tag laravel-database-logger
         ],
     ```
 
-    - or change in `.env` file to set `LOG_CHANNEL=database`
+    - add in `.env` file to set `DB_CONNECTION_LOGGER=pgsql`
 
 ---
 
